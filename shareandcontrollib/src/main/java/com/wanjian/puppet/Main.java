@@ -4,12 +4,14 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.hardware.input.InputManager;
+import android.media.projection.MediaProjection;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.v4.view.InputDeviceCompat;
+import android.util.Log;
 import android.view.IWindowManager;
 import android.view.InputEvent;
 import android.view.KeyEvent;
@@ -38,27 +40,27 @@ public class Main {
 
     private static float scale = 1;
 
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+//    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+//
+//        System.out.println("start!");
+//        LocalServerSocket serverSocket = new LocalServerSocket("puppet-ver1");
+//
+//        init();
+//
+//        while (true) {
+//            System.out.println("listen.....");
+//            try {
+//                LocalSocket socket = serverSocket.accept();
+//                acceptConnect(socket);
+//            } catch (Exception e) {
+//                serverSocket = new LocalServerSocket("puppet-ver1");
+//            }
+//
+//        }
+//
+//    }
 
-        System.out.println("start!");
-        LocalServerSocket serverSocket = new LocalServerSocket("puppet-ver1");
-
-        init();
-
-        while (true) {
-            System.out.println("listen.....");
-            try {
-                LocalSocket socket = serverSocket.accept();
-                acceptConnect(socket);
-            } catch (Exception e) {
-                serverSocket = new LocalServerSocket("puppet-ver1");
-            }
-
-        }
-
-    }
-
-    private static void init() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static void init() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         Method getServiceMethod = Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", new Class[]{String.class});
         wm = IWindowManager.Stub.asInterface((IBinder) getServiceMethod.invoke(null, new Object[]{"window"}));
@@ -69,38 +71,8 @@ public class Main {
 
     }
 
-    private static void acceptConnect(LocalSocket socket) {
-        System.out.println("accepted...");
-        read(socket);
-        write(socket);
-    }
 
-    private static void write(final LocalSocket socket) {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    final int VERSION = 2;
-                    BufferedOutputStream outputStream = new BufferedOutputStream(socket.getOutputStream());
-                    while (true) {
-                        Bitmap bitmap = screenshot();
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteArrayOutputStream);
-
-                        outputStream.write(2);
-                        writeInt(outputStream, byteArrayOutputStream.size());
-                        outputStream.write(byteArrayOutputStream.toByteArray());
-                        outputStream.flush();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-    }
-
-    private static void read(final LocalSocket socket) {
+    public static void read(final LocalSocket socket) {
 
         new Thread() {
             private final String DOWN = "DOWN";
@@ -129,6 +101,7 @@ public class Main {
                             e.printStackTrace();
                             return;
                         }
+                        Log.w("MainActivity", "---read---   line="+line);
                         try {
                             if (line.startsWith(DOWN)) {
                                 hanlerDown(line.substring(DOWN.length()));
@@ -209,14 +182,6 @@ public class Main {
     }
 
 
-    private static void writeInt(OutputStream outputStream, int v) throws IOException {
-        outputStream.write(v >> 24);
-        outputStream.write(v >> 16);
-        outputStream.write(v >> 8);
-        outputStream.write(v);
-    }
-
-
     public static Bitmap screenshot() throws Exception {
 
         String surfaceClassName;
@@ -232,7 +197,7 @@ public class Main {
         }
         b = (Bitmap) Class.forName(surfaceClassName).getDeclaredMethod("screenshot", new Class[]{Integer.TYPE, Integer.TYPE}).invoke(null, new Object[]{Integer.valueOf(size.x), Integer.valueOf(size.y)});
 
-        int rotation = wm.getRotation();
+        int rotation = wm.getDefaultDisplayRotation();
 
         if (rotation == 0) {
             return b;

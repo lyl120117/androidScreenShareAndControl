@@ -44,7 +44,7 @@ public class Client extends JFrame {
         portField.setText("8888");
 
         JPanel btnPanel = new JPanel(new BorderLayout(5, 5));
-        JButton btn = new JButton("链接");
+        JButton btn = new JButton("Connect");
         btnPanel.add(btn, BorderLayout.CENTER);
 
         JSlider  jSlider=createSlider();
@@ -71,7 +71,7 @@ public class Client extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setBounds(360, 20, 350, 600);
 
-        setTitle("屏幕共享");
+        setTitle("Screen Share");
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
