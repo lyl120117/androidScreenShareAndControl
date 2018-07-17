@@ -4,8 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".ServerActivity">
 
+    <TextView
+        android:id="@+id/msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -13,14 +22,8 @@
         android:orientation="vertical">
 
         <Button
-            android:onClick="startServer"
-            android:text="SERVER"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:onClick="startClient"
-            android:text="CLIENT"
+            android:onClick="StartRecorder"
+            android:text="Start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>

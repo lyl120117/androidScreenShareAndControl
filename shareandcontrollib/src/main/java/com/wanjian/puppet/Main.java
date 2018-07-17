@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.Socket;
 
 /**
  * Created by wanjian on 2017/4/4.
@@ -72,7 +73,7 @@ public class Main {
     }
 
 
-    public static void read(final LocalSocket socket) {
+    public static void read(final Socket socket) {
 
         new Thread() {
             private final String DOWN = "DOWN";
