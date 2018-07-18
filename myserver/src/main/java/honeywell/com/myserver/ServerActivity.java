@@ -2,6 +2,7 @@ package honeywell.com.myserver;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.media.Image;
@@ -82,8 +83,10 @@ public class ServerActivity extends AppCompatActivity {
 
         DisplayMetrics metric = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metric);
-        width = metric.widthPixels;
-        height = metric.heightPixels;
+//        width = metric.widthPixels;
+//        height = metric.heightPixels;
+        width = 540;
+        height = 960;
         dpi = metric.densityDpi;
 
         projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
@@ -106,21 +109,25 @@ public class ServerActivity extends AppCompatActivity {
                     final int VERSION = 2;
                     BufferedOutputStream outputStream = new BufferedOutputStream(socket.getOutputStream());
                     while (true) {
+                        long s1 = System.currentTimeMillis();
                         Bitmap bitmap = startCapture();
-
+                        long s2 = System.currentTimeMillis();
                         if(bitmap == null){
                             Thread.sleep(10);
                             continue;
                         }
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteArrayOutputStream);
+                        long s3 = System.currentTimeMillis();
 
                         outputStream.write(VERSION);
-                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()
-                                +", "+bitmap.getWidth()+"/"+bitmap.getHeight());
                         writeInt(outputStream, byteArrayOutputStream.size());
                         outputStream.write(byteArrayOutputStream.toByteArray());
                         outputStream.flush();
+                        long s4 = System.currentTimeMillis();
+                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()
+                                +", "+bitmap.getWidth()+"/"+bitmap.getHeight()
+                                +", s1="+(s2 - s1)+", s2="+(s3 - s2)+", s3="+(s4 - s3));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -255,17 +262,38 @@ public class ServerActivity extends AppCompatActivity {
         int pixelStride = planes[0].getPixelStride();
         int rowStride = planes[0].getRowStride();
         int rowPadding = rowStride - pixelStride * width;
-        Log.w(TAG, "---startCapture---  "+planes.length+", width="+width+", height="+height
-            +", pixelStride="+pixelStride+", rowStride="+rowStride+", rowPadding="+rowPadding);
+//        Log.w(TAG, "---startCapture---  "+planes.length+", width="+width+", height="+height
+//            +", pixelStride="+pixelStride+", rowStride="+rowStride+", rowPadding="+rowPadding);
         bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_4444);
         bitmap.copyPixelsFromBuffer(buffer);
         image.close();
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+//        bitmap = resizeImage(bitmap, 540, 960);
 
         return bitmap;
     }
 
-    private void setUpVirtualDisplay() {
+    public Bitmap resizeImage(Bitmap bitmap, int w, int h) {
+        Bitmap BitmapOrg = bitmap;
+        int width = BitmapOrg.getWidth();
+        int height = BitmapOrg.getHeight();
+        int newWidth = w;
+        int newHeight = h;
+
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        // if you want to rotate the Bitmap
+        // matrix.postRotate(45);
+        Bitmap resizedBitmap = Bitmap.createBitmap(BitmapOrg, 0, 0, width,
+                height, matrix, true);
+        return resizedBitmap;
+    }
+
+
+        private void setUpVirtualDisplay() {
         Log.w(TAG, "---setUpVirtualDisplay---");
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
         mediaProjection.createVirtualDisplay("ScreenShout",
