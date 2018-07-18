@@ -260,6 +260,7 @@ public class ServerActivity extends AppCompatActivity {
         bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_4444);
         bitmap.copyPixelsFromBuffer(buffer);
         image.close();
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
 
         return bitmap;
     }
