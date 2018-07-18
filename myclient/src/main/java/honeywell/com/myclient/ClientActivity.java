@@ -1,4 +1,4 @@
-package honeywell.com.myserver;
+package honeywell.com.myclient;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,12 +9,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ImageView;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;

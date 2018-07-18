@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startClient(View view) {
-        startActivity(new Intent(this, ClientActivity.class));
+//        startActivity(new Intent(this, ClientActivity.class));
     }
 
 }

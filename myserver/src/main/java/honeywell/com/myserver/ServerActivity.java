@@ -138,9 +138,9 @@ public class ServerActivity extends AppCompatActivity {
                         outputStream.write(byteArrayOutputStream.toByteArray());
                         outputStream.flush();
                         long s4 = System.currentTimeMillis();
-//                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()
-//                                +", "+bitmap.getWidth()+"/"+bitmap.getHeight()
-//                                +", s1="+(s2 - s1)+", s2="+(s3 - s2)+", s3="+(s4 - s3));
+                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()+", "+bitmap.getByteCount()
+                                +", "+bitmap.getWidth()+"/"+bitmap.getHeight()
+                                +", s1="+(s2 - s1)+", s2="+(s3 - s2)+", s3="+(s4 - s3));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -357,7 +357,7 @@ public class ServerActivity extends AppCompatActivity {
                             e.printStackTrace();
                             return;
                         }
-                        Log.w(TAG, "---read---   line="+line);
+//                        Log.w(TAG, "---read---   line="+line);
                         try {
                             if (line.startsWith(DOWN)) {
                                 hanlerDown(line.substring(DOWN.length()));

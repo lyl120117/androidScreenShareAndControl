@@ -1,4 +1,4 @@
-package honeywell.com.myserver;
+package honeywell.com.myclient;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -40,7 +40,7 @@ public class MyImage extends ImageView {
 
             final float x = event.getX();
             final float y = event.getY();
-            Log.w(ClientActivity.TAG, "onTouchEvent   x="+x+", y="+y+", "+getWidth()+"/"+getHeight());
+//            Log.w(ClientActivity.TAG, "onTouchEvent   x="+x+", y="+y+", "+getWidth()+"/"+getHeight());
             handler.post(new Runnable() {
                 @Override
                 public void run() {
