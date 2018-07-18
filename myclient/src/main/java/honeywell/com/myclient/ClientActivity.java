@@ -7,8 +7,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -27,7 +29,9 @@ public class ClientActivity extends AppCompatActivity {
     private boolean started;
     private MyImage myImage;
     HandlerThread handlerThread = new HandlerThread("touch");
+    HandlerThread imageHandlerThread = new HandlerThread("image");
     private Handler handler;
+    private Handler imageHandler;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -39,6 +43,16 @@ public class ClientActivity extends AppCompatActivity {
         setupView();
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
+        imageHandlerThread.start();
+        imageHandler = new Handler(imageHandlerThread.getLooper()){
+            @Override
+            public void handleMessage(Message msg) {
+                byte []bytes = (byte[]) msg.obj;
+                InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+                Bitmap bitmap = BitmapFactory.decodeStream(byteArrayInputStream);
+                setImage(bitmap);
+            }
+        };
     }
 
     private void setupView(){
@@ -93,9 +107,9 @@ public class ClientActivity extends AppCompatActivity {
                     myImage.writer = writer;
                     myImage.handler = handler;
                     started = true;
-                    byte[] bytes = null;
+
                     while (started) {
-                        long s1 = System.currentTimeMillis();
+                        byte[] bytes = null;
                         int version = inputStream.read();
                         if (version == -1) {
                             return;
@@ -108,14 +122,17 @@ public class ClientActivity extends AppCompatActivity {
                             bytes = new byte[length];
                         }
                         int read = 0;
+                        long s1 = System.currentTimeMillis();
                         while ((read < length)) {
                             read += inputStream.read(bytes, read, length - read);
                         }
-                        InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
                         long s2 = System.currentTimeMillis();
-                        Bitmap bitmap = BitmapFactory.decodeStream(byteArrayInputStream);
-                        setImage(bitmap);
+                        Message m = Message.obtain();
+                        m.obj = bytes;
+                        imageHandler.sendMessage(m);
+
                         long s3 = System.currentTimeMillis();
+                        Log.w(TAG, "---read---  "+length+", s1="+(s2 - s1)+", s2="+(s3 - s2));
 
                     }
 
