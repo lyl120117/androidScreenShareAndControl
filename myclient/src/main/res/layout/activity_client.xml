@@ -51,14 +51,14 @@
             android:orientation="vertical">
             <EditText
                 android:id="@+id/ip"
-                android:text="192.168.1.170"
-                android:layout_width="150dp"
+                android:text="frpgz1.idcfengye.com"
+                android:layout_width="200dp"
                 android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/port"
-                android:text="8888"
-                android:layout_width="150dp"
+                android:text="10005"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content" />
             <Button
                 android:onClick="onConnect"
