@@ -5,8 +5,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -22,7 +26,11 @@ import java.net.Socket;
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
 public class ClientActivity extends AppCompatActivity {
+    public static final String TAG = ClientActivity.class.getSimpleName();
     private boolean started;
+    private MyImage myImage;
+    HandlerThread handlerThread = new HandlerThread("touch");
+    private Handler handler;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -31,6 +39,13 @@ public class ClientActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
         setContentView(R.layout.activity_client);
         setToolsVisible(true);
+        setupView();
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+    }
+
+    private void setupView(){
+        myImage = findViewById(R.id.img);
     }
 
     private void setToolsVisible(boolean visible){
@@ -47,8 +62,7 @@ public class ClientActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ImageView iv = findViewById(R.id.img);
-                iv.setBackground(new BitmapDrawable(b));
+                myImage.setBackground(new BitmapDrawable(b));
 //                iv.setImageBitmap(b);
             }
         });
@@ -79,6 +93,8 @@ public class ClientActivity extends AppCompatActivity {
                     Socket socket = new Socket(ip, Integer.parseInt(port));
                     BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
                     writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                    myImage.writer = writer;
+                    myImage.handler = handler;
                     started = true;
                     byte[] bytes = null;
                     while (started) {
@@ -124,4 +140,48 @@ public class ClientActivity extends AppCompatActivity {
         return (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
     }
 
+    public void onBack(View view) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    writer.write("BACK");
+                    writer.newLine();
+                    writer.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void onHome(View view) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    writer.write("HOME");
+                    writer.newLine();
+                    writer.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void onSwitch(View view) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    writer.write("MENU");
+                    writer.newLine();
+                    writer.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 }
