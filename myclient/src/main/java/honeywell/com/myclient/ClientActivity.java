@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.Vector;
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
 public class ClientActivity extends AppCompatActivity {
@@ -32,6 +34,8 @@ public class ClientActivity extends AppCompatActivity {
     HandlerThread imageHandlerThread = new HandlerThread("image");
     private Handler handler;
     private Handler imageHandler;
+    private final static int MAX_SIZE = 3;
+    private Vector<byte[]> vector = new Vector<>(MAX_SIZE);
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -47,10 +51,14 @@ public class ClientActivity extends AppCompatActivity {
         imageHandler = new Handler(imageHandlerThread.getLooper()){
             @Override
             public void handleMessage(Message msg) {
-                byte []bytes = (byte[]) msg.obj;
+                if(vector.size() == 0){
+                    return;
+                }
+                byte []bytes = vector.remove(0);
                 InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
                 Bitmap bitmap = BitmapFactory.decodeStream(byteArrayInputStream);
                 setImage(bitmap);
+                imageHandler.sendEmptyMessage(0);
             }
         };
     }
@@ -127,9 +135,11 @@ public class ClientActivity extends AppCompatActivity {
                             read += inputStream.read(bytes, read, length - read);
                         }
                         long s2 = System.currentTimeMillis();
-                        Message m = Message.obtain();
-                        m.obj = bytes;
-                        imageHandler.sendMessage(m);
+                        if(vector.size() > MAX_SIZE){
+                            vector.remove(0);
+                        }
+                        vector.add(bytes);
+                        imageHandler.sendEmptyMessage(0);
 
                         long s3 = System.currentTimeMillis();
                         Log.w(TAG, "---read---  "+length+", s1="+(s2 - s1)+", s2="+(s3 - s2));
@@ -197,5 +207,19 @@ public class ClientActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void onInside(View view) {
+        TextView tv = findViewById(R.id.ip);
+        tv.setText("192.168.1.170");
+        tv = findViewById(R.id.port);
+        tv.setText("8888");
+    }
+
+    public void onOutside(View view) {
+        TextView tv = findViewById(R.id.ip);
+        tv.setText("yunos.maomao10.cn");
+        tv = findViewById(R.id.port);
+        tv.setText("10056");
     }
 }

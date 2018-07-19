@@ -13,7 +13,10 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.InputDeviceCompat;
@@ -46,6 +49,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
+import java.util.Vector;
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
 public class ServerActivity extends AppCompatActivity {
@@ -92,7 +96,7 @@ public class ServerActivity extends AppCompatActivity {
         sendMsg(getHostIP());
         start();
 
-
+        startHandler();
 
         DisplayMetrics metric = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metric);
@@ -113,34 +117,80 @@ public class ServerActivity extends AppCompatActivity {
         write(socket);
     }
 
+    BufferedOutputStream outputStream;
+    private static final int MAX_SIZE = 3;
+    Vector<Bitmap> vector = new Vector(MAX_SIZE);
+    private HandlerThread handlerThread = new HandlerThread("socket_image");
+    private Handler handler;
+    private void startHandler(){
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper()){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                    if(vector.size() == 0){
+                        return;
+                    }
+                    try{
+                        long s1 = System.currentTimeMillis();
+                        final int VERSION = 2;
+                        Bitmap bitmap = vector.remove(0);
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 10, byteArrayOutputStream);
+                        long s2 = System.currentTimeMillis();
+
+                        outputStream.write(VERSION);
+                        writeInt(outputStream, byteArrayOutputStream.size());
+                        outputStream.write(byteArrayOutputStream.toByteArray());
+                        outputStream.flush();
+                        long s3 = System.currentTimeMillis();
+                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()+", s1="+(s2 - s1)+", s2="+(s3 - s2));
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    handler.sendEmptyMessage(0);
+            }
+        };
+    }
+
     private void write(final Socket socket) {
         new Thread() {
             @Override
             public void run() {
                 super.run();
                 try {
-                    final int VERSION = 2;
-                    BufferedOutputStream outputStream = new BufferedOutputStream(socket.getOutputStream());
+                    outputStream = new BufferedOutputStream(socket.getOutputStream());
                     while (true) {
                         long s1 = System.currentTimeMillis();
                         Bitmap bitmap = startCapture();
                         long s2 = System.currentTimeMillis();
                         if(bitmap == null){
-                            Thread.sleep(10);
+                            Thread.sleep(5);
                             continue;
                         }
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteArrayOutputStream);
-                        long s3 = System.currentTimeMillis();
+                        vector.add(bitmap);
+                        if(vector.size() > MAX_SIZE){
+                            vector.remove(0);
+                        }
 
-                        outputStream.write(VERSION);
-                        writeInt(outputStream, byteArrayOutputStream.size());
-                        outputStream.write(byteArrayOutputStream.toByteArray());
-                        outputStream.flush();
-                        long s4 = System.currentTimeMillis();
-                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()+", "+bitmap.getByteCount()
-                                +", "+bitmap.getWidth()+"/"+bitmap.getHeight()
-                                +", s1="+(s2 - s1)+", s2="+(s3 - s2)+", s3="+(s4 - s3));
+                        handler.sendEmptyMessage(0);
+
+
+                        Log.w(TAG, "---capture---     "+vector.size()+", "
+                                +bitmap.getWidth()+"/"+bitmap.getHeight()+", s1="+(s2 - s1));
+
+//                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//                        bitmap.compress(Bitmap.CompressFormat.JPEG, 10, byteArrayOutputStream);
+//                        long s3 = System.currentTimeMillis();
+//
+//                        outputStream.write(VERSION);
+//                        writeInt(outputStream, byteArrayOutputStream.size());
+//                        outputStream.write(byteArrayOutputStream.toByteArray());
+//                        outputStream.flush();
+//                        long s4 = System.currentTimeMillis();
+//                        Log.w(TAG, "---write---     "+byteArrayOutputStream.size()+", "+bitmap.getByteCount()
+//                                +", "+bitmap.getWidth()+"/"+bitmap.getHeight()
+//                                +", s1="+(s2 - s1)+", s2="+(s3 - s2)+", s3="+(s4 - s3));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
