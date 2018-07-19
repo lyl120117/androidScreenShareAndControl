@@ -51,13 +51,13 @@
             android:orientation="vertical">
             <EditText
                 android:id="@+id/ip"
-                android:text="frpgz1.idcfengye.com"
+                android:text="yunos.maomao10.cn"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/port"
-                android:text="10005"
+                android:text="10056"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content" />
             <Button
